@@ -1,13 +1,14 @@
 --subquery: 
+SET search_path TO election;
 
 -- 1. List total organizational donations and total individual donations for each campaign.
 
 --revoke all priviledges: 
-REVOKE ALL ON ElectionCampaigns, Candidate, Volunteer, Staff, Moderator, Debate, DebateCandidates, Donor FROM <userid>;
+REVOKE ALL ON ElectionCampaigns, Candidate, Volunteer, Staff, Moderator, Debate, DebateCandidates, Donor FROM longlang;
 
 --grant minimum priviledges needed:
-GRANT SELECT(campaign_id) ON ElectionCampaigns TO <userid>;
-GRANT SELECT(donor_campaign_id, donation_type, donate_amount) ON Donor to <userid>;
+GRANT SELECT(campaign_id) ON ElectionCampaigns TO longlang;
+GRANT SELECT(donor_campaign_id, donation_type, donate_amount) ON Donor to longlang;
 
 SELECT ElectionCampaigns.campaign_id AS Campaign_ID, SUM(Donor.donate_amount) AS Total_Organization_Donations
 FROM ElectionCampaigns JOIN Donor ON ElectionCampaigns.campaign_id = Donor.donor_campaign_id 
@@ -22,11 +23,11 @@ GROUP BY ElectionCampaigns.campaign_id;
 --2. Find those volunteers who offer to work on every campaign in the dataset.
 
 --revoke all priviledges: 
-REVOKE ALL ON ElectionCampaigns, Candidate, Volunteer, Staff, Moderator, Debate, DebateCandidates, Donor FROM <userid>;
+REVOKE ALL ON ElectionCampaigns, Candidate, Volunteer, Staff, Moderator, Debate, DebateCandidates, Donor FROM longlang;
 
 --grant minimum priviledges needed:
-GRANT SELECT(campaign_id) ON ElectionCampaigns TO <userid>;
-GRANT SELECT(campaign_id, volunteer_email) ON Volunteer TO <userid>;
+GRANT SELECT(campaign_id) ON ElectionCampaigns TO longlang;
+GRANT SELECT(campaign_id, volunteer_email) ON Volunteer TO longlang;
 
 DROP VIEW IF EXISTS all_volunteer_campaign CASCADE;
 DROP VIEW IF EXISTS missing_volunteers CASCADE;
@@ -50,11 +51,11 @@ EXCEPT (SELECT Volunteer_Email FROM missing_volunteers);
 --3. Find candidates who are involved in every debate.
 
 --revoke all priviledges: 
-REVOKE ALL ON ElectionCampaigns, Candidate, Volunteer, Staff, Moderator, Debate, DebateCandidates, Donor FROM <userid>;
+REVOKE ALL ON ElectionCampaigns, Candidate, Volunteer, Staff, Moderator, Debate, DebateCandidates, Donor FROM longlang;
 
 --grant minimum priviledges needed:
-GRANT SELECT(debate_id) ON Debate TO <userid>;
-GRANT SELECT(candidate_email, debate_id) ON DebateCandidates TO <userid>;
+GRANT SELECT(debate_id) ON Debate TO longlang;
+GRANT SELECT(candidate_email, debate_id) ON DebateCandidates TO longlang;
 
 DROP VIEW IF EXISTS all_candidate_debates CASCADE;
 DROP VIEW IF EXISTS missing_candidates CASCADE;
