@@ -1,0 +1,256 @@
+
+-- could not check the overlap of candidates, volunteers, and staff in a campaign
+-- Assume all volunteers and staff are workers
+-- extra: add constraint on amounts of donation wo be equal or greater than 0
+-- extra: add constraint on spending_limit
+DROP SCHEMA if EXISTS Election CASCADE;
+
+
+CREATE SCHEMA Election
+-- election campaigns are uniquely identified by its campaign id
+  CREATE TABLE ElectionCampaigns (
+    campaign_id INTEGER PRIMARY KEY,
+    spending_limit FLOAT NOT NULL,
+    CONSTRAINT spending_limit_check CHECK (spending_limit >= 0)
+  )
+
+-- candidates volunteers and Staff are uniquely identified by its email
+-- they both have a campaign id which refers to which campaign they participated in 
+  CREATE TABLE Candidate (
+    campaign_id INTEGER NOT NULL,
+    FOREIGN KEY (campaign_id) REFERENCES ElectionCampaigns(campaign_id),
+    candidate_email TEXT PRIMARY KEY,
+    c_name TEXT
+  )
+
+-- use end_time minus the start_time to get the time blocks that is assigned to this email
+-- worker is uniquely identified by its email. either volunteer_email or Staff email
+-- and we check if the campaign_activity is in the assigned two activities
+-- Because we assume that volunteers and staff are all workers, 
+  CREATE TABLE Volunteer (
+    campaign_id INTEGER,
+    FOREIGN KEY (campaign_id) REFERENCES ElectionCampaigns(campaign_id),
+    volunteer_email TEXT,
+    start_time TIMESTAMP NOT NULL, 
+    end_time TIMESTAMP NOT NULL,
+    campaign_activity TEXT NOT NULL,
+    CHECK (campaign_activity = 'phone banks' OR campaign_activity = 'door-to-door canvassing'),
+    PRIMARY KEY (volunteer_email, start_time, end_time),
+    v_name TEXT
+  )
+
+  CREATE TABLE Staff (
+    campaign_id INTEGER,
+    FOREIGN KEY (campaign_id) REFERENCES ElectionCampaigns(campaign_id),
+    staff_email TEXT,
+    start_time TIMESTAMP,
+    end_time TIMESTAMP,
+    campaign_activity TEXT NOT NULL,
+    CHECK (campaign_activity = 'phone banks' OR campaign_activity = 'door-to-door canvassing'),
+    PRIMARY KEY (staff_email, start_time, end_time),
+    s_name TEXT
+  )
+
+  CREATE TABLE Moderator (
+    moderator_email TEXT PRIMARY KEY,
+    m_name TEXT
+  )
+
+-- Debate id uniquely identifies the one debate 
+-- The date_time represents the date and time of the debate 
+-- Use Unique to avoid the same moderator attending two or more debates at the same date and time
+  CREATE TABLE Debate (
+    debate_id INTEGER PRIMARY KEY,
+    date_time TIMESTAMP NOT NULL,
+    moderator_email TEXT NOT NULL,
+    FOREIGN KEY (moderator_email) REFERENCES Moderator(moderator_email),
+    UNIQUE (date_time, moderator_email)
+  )
+
+-- To avoid the same candidate attending two or more debates at same time, 
+-- use pair of (debate_id and candidate_email) as primary key to avoid duplicate 
+-- and allow multiple candidates in one debate
+  CREATE TABLE DebateCandidates (
+    debate_id INTEGER, 
+    FOREIGN KEY (debate_id) REFERENCES Debate(debate_id),
+    candidate_email TEXT,
+    FOREIGN KEY (candidate_email) REFERENCES Candidate(candidate_email),
+    PRIMARY KEY (debate_id, candidate_email)
+  )
+
+-- donors are uniquely identdied by their email, donor_campaign_id, donate_amount, is_indivaidual
+-- is organization or not
+-- each donor contains a campaign id which refers the campaign they donated
+-- Two boolean are used to identify wheether the donor is organization or individual 
+
+  CREATE TABLE Donor (
+    address TEXT,
+    donor_email TEXT,
+    donate_amount FLOAT,
+    CHECK (donate_amount >= 0),
+    donor_campaign_id INTEGER,
+    FOREIGN KEY (donor_campaign_id) REFERENCES ElectionCampaigns(campaign_id),
+    PRIMARY KEY (donor_email, donor_campaign_id, donate_amount, donation_type),
+    donation_type TEXT NOT NULL, 
+    CHECK (donation_type = 'Individual' OR donation_type = 'Organization')
+  );
+
+SET search_path TO election;
+  -- campaigns: 
+  INSERT INTO ElectionCampaigns VALUES (1, 10000);
+  INSERT INTO ElectionCampaigns VALUES (2, 50000);
+  INSERT INTO ElectionCampaigns VALUES (3, 1000000);
+
+  -- candidates: 
+  INSERT INTO Candidate VALUES (1, 'larry@gmail.com', 'Larry');
+  INSERT INTO Candidate VALUES (1, 'John_wick@hotmail.com', 'John');
+  INSERT INTO Candidate VALUES (2, 'shulin@yahoo.com', 'Shulin');
+  INSERT INTO Candidate VALUES (2, 'adam@gmail.com', 'Adam');
+  INSERT INTO Candidate VALUES (3, 'James@gmail.com', 'James');
+  INSERT INTO Candidate VALUES (3, 'ontarioMayor@gmail.com', 'Doug Ford');
+  INSERT INTO Candidate VALUES (3, 'realdonaldtrump@gmail.com');
+
+-- volunteers:
+INSERT INTO Volunteer VALUES 
+(1,'andy@gmail.com','2023-05-03 09:00:00','2023-05-03 15:00:00','door-to-door canvassing', 'Andy');
+INSERT INTO Volunteer VALUES 
+(1,'andy@gmail.com','2023-05-04 11:00:00','2023-05-04 14:00:00','phone banks', 'Andy');
+INSERT INTO Volunteer VALUES 
+(2,'andy@gmail.com','2023-05-05 11:00:00','2023-05-05 14:00:00','phone banks', 'Andy');
+INSERT INTO Volunteer VALUES 
+(2,'andy@gmail.com','2023-05-06 11:00:00','2023-05-06 14:00:00','door-to-door canvassing', 'Andy');
+INSERT INTO Volunteer VALUES 
+(2,'forrest@gmail.com','2023-05-03 09:00:00','2023-05-03 15:00:00','phone banks', 'Forrest');
+INSERT INTO Volunteer VALUES 
+(3,'andy@gmail.com','2023-05-07 08:00:00','2023-05-07 10:00:00','door-to-door canvassing', 'Andy');
+INSERT INTO Volunteer VALUES 
+(3,'trumpjr@gmail.com','2023-05-03 09:00:00','2023-05-03 18:00:00','phone banks', 'Trump Junior');
+INSERT INTO Volunteer VALUES 
+(3,'andy@gmail.com','2023-05-08 10:00:00','2023-05-08 15:00:00','phone banks', 'Andy');
+
+--staff:
+INSERT INTO Staff VALUES 
+(1,'jack@gmail.com','2023-04-03 09:00:00','2023-04-03 17:00:00','door-to-door canvassing', 'Jack Sparrow');
+INSERT INTO Staff VALUES 
+(2,'ryan@hotmail.com','2023-05-04 13:00:00','2023-05-03 17:00:00','phone banks', 'Ryan');
+INSERT INTO Staff VALUES 
+(3,'jonathon@yahoo.com','2023-05-04 07:00:00','2023-05-03 10:00:00','phone banks', 'Jonathan');
+
+--moderators: 
+INSERT INTO Moderator VALUES 
+('jordanpete@gmail.com', 'Jordan Peterson');
+INSERT INTO Moderator VALUES 
+('joeBiden@gmail.com', 'Joe Biden');
+INSERT INTO Moderator VALUES 
+('andrewtate@hotmail.com', 'Andrew Tate');
+
+--debates:
+INSERT INTO Debate VALUES 
+(1, '2023-06-10 18:00:00','joeBiden@gmail.com');
+INSERT INTO Debate VALUES 
+(2, '2023-06-10 20:00:00','jordanpete@gmail.com');
+INSERT INTO Debate VALUES 
+(3, '2023-06-11 18:00:00','joeBiden@gmail.com');
+INSERT INTO Debate VALUES 
+(4, '2023-06-11 20:00:00','andrewtate@hotmail.com');
+
+--debate candidates: 
+INSERT INTO DebateCandidates VALUES (1, 'larry@gmail.com');
+INSERT INTO DebateCandidates VALUES (1, 'ontarioMayor@gmail.com');
+INSERT INTO DebateCandidates VALUES (1, 'realdonaldtrump@gmail.com');
+INSERT INTO DebateCandidates VALUES (2, 'realdonaldtrump@gmail.com');
+INSERT INTO DebateCandidates VALUES (2, 'John_wick@hotmail.com');
+INSERT INTO DebateCandidates VALUES (3, 'realdonaldtrump@gmail.com');
+INSERT INTO DebateCandidates VALUES (3, 'shulin@yahoo.com');
+INSERT INTO DebateCandidates VALUES (3, 'adam@gmail.com');
+INSERT INTO DebateCandidates VALUES (4, 'realdonaldtrump@gmail.com');
+INSERT INTO DebateCandidates VALUES (4, 'James@gmail.com');
+
+--donors: 
+INSERT INTO Donor VALUES 
+('St Michaels Street', 'uoft@gmail.com', 20000, 3, 'Organization');
+INSERT INTO Donor VALUES 
+('37 Grosvenor St', 'Toronto_help@gmail.com', 10000, 3, 'Organization');
+INSERT INTO Donor VALUES 
+('44 Gerrard St', 'allen@gmail.com', 20, 1, 'Individual');
+INSERT INTO Donor VALUES 
+('44 Gerrard St', 'allen_brother@gmail.com', 50, 1, 'Individual');
+INSERT INTO Donor VALUES 
+('Harbord Front', 'richguy@gmail.com', 100000, 2, 'Individual');
+
+--subquery: 
+
+-- 1. List total organizational donations and total individual donations for each campaign.
+
+--revoke all priviledges: 
+REVOKE ALL ON ElectionCampaigns, Candidate, Volunteer, Staff, Moderator, Debate, DebateCandidates, Donor FROM <userid>;
+
+--grant minimum priviledges needed:
+GRANT SELECT(campaign_id) ON ElectionCampaigns TO <userid>;
+GRANT SELECT(donor_campaign_id, donation_type, donate_amount) ON Donor to <userid>;
+
+SELECT ElectionCampaigns.campaign_id AS Campaign_ID, SUM(Donor.donate_amount) AS Total_Organization_Donations
+FROM ElectionCampaigns JOIN Donor ON ElectionCampaigns.campaign_id = Donor.donor_campaign_id 
+WHERE Donor.donation_type = 'Organization'
+GROUP BY ElectionCampaigns.campaign_id;
+
+SELECT ElectionCampaigns.campaign_id AS Campaign_ID, SUM(Donor.donate_amount) AS Total_Individual_Doations 
+FROM ElectionCampaigns JOIN Donor ON ElectionCampaigns.campaign_id = Donor.donor_campaign_id 
+WHERE Donor.donation_type = 'Individual'
+GROUP BY ElectionCampaigns.campaign_id;
+
+--2. Find those volunteers who offer to work on every campaign in the dataset.
+
+--revoke all priviledges: 
+REVOKE ALL ON ElectionCampaigns, Candidate, Volunteer, Staff, Moderator, Debate, DebateCandidates, Donor FROM <userid>;
+
+--grant minimum priviledges needed:
+GRANT SELECT(campaign_id) ON ElectionCampaigns TO <userid>;
+GRANT SELECT(campaign_id, volunteer_email) ON Volunteer TO <userid>;
+
+DROP VIEW IF EXISTS all_volunteer_campaign CASCADE;
+DROP VIEW IF EXISTS missing_volunteers CASCADE;
+
+CREATE VIEW all_volunteer_campaign AS
+SELECT DISTINCT ElectionCampaigns.campaign_id, Volunteer.volunteer_email
+FROM ElectionCampaigns, Volunteer;
+
+CREATE VIEW missing_volunteers AS
+SELECT DISTINCT volunteer_email
+FROM all_volunteer_campaign
+WHERE (campaign_id, volunteer_email) NOT IN (
+  SELECT Volunteer.campaign_id, Volunteer.volunteer_email
+  FROM Volunteer
+);
+
+SELECT Volunteer_Email AS Volunteer_in_all_campaigns
+FROM all_volunteer_campaign
+EXCEPT (SELECT Volunteer_Email FROM missing_volunteers);
+
+--3. Find candidates who are involved in every debate.
+
+--revoke all priviledges: 
+REVOKE ALL ON ElectionCampaigns, Candidate, Volunteer, Staff, Moderator, Debate, DebateCandidates, Donor FROM <userid>;
+
+--grant minimum priviledges needed:
+GRANT SELECT(debate_id) ON Debate TO <userid>;
+GRANT SELECT(candidate_email, debate_id) ON DebateCandidates TO <userid>;
+
+DROP VIEW IF EXISTS all_candidate_debates CASCADE;
+DROP VIEW IF EXISTS missing_candidates CASCADE;
+
+CREATE VIEW all_candidate_debates AS
+SELECT DISTINCT Debate.debate_id, DebateCandidates.candidate_email
+FROM Debate, DebateCandidates;
+
+CREATE VIEW missing_candidates AS
+SELECT DISTINCT candidate_email
+FROM all_candidate_debates
+WHERE (debate_id, candidate_email) NOT IN (
+  SELECT DebateCandidates.debate_id, DebateCandidates.candidate_email
+  FROM DebateCandidates
+); 
+
+SELECT candidate_email AS Candidate_in_every_debate
+FROM all_candidate_debates
+EXCEPT (SELECT candidate_email FROM missing_candidates);
