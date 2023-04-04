@@ -1,0 +1,85 @@
+DROP SCHEMA
+CREATE SCHEMA
+SET
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+SET
+REVOKE
+GRANT
+GRANT
+ campaign_id | total_organization_donations 
+-------------+------------------------------
+           3 |                        30000
+(1 row)
+
+ campaign_id | total_individual_doations 
+-------------+---------------------------
+           1 |                        70
+           2 |                    100000
+(2 rows)
+
+REVOKE
+GRANT
+GRANT
+DROP VIEW
+DROP VIEW
+CREATE VIEW
+CREATE VIEW
+ volunteer_in_all_campaigns 
+----------------------------
+ andy@gmail.com
+(1 row)
+
+REVOKE
+GRANT
+GRANT
+DROP VIEW
+DROP VIEW
+CREATE VIEW
+CREATE VIEW
+ candidate_in_every_debate 
+---------------------------
+ realdonaldtrump@gmail.com
+(1 row)
+
