@@ -37,4 +37,5 @@ Additional tables capture candidates, staff members, debate moderators, debates,
 Each script sets the search path to the `election` schema.
 
 ## License/Attribution
-No explicit license is provided. The files are supplied for educational use and attribution should be given to the original project authors.
+Provided for academic purposes as part of CSC343 (University of Toronto).
+Please review the original course license terms before reusing this code.
